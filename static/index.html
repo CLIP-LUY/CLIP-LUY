@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CLIP LUY</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d31;--gold:#f5bd22;--muted:#aab4c8}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#090d18,#131d32);color:#fff;font:16px Arial,sans-serif}
+main{max-width:900px;margin:40px auto;padding:20px}.brand{display:flex;align-items:center;gap:14px}
+.logo{background:var(--gold);color:#111;width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-weight:900;font-size:23px}
+h1{margin:0;font-size:30px;letter-spacing:1px}.sub{color:var(--muted);margin-top:5px}
+.panel{background:var(--panel);border:1px solid #293650;border-radius:20px;padding:24px;margin-top:25px;box-shadow:0 18px 50px #0005}
+label{display:block;margin:15px 0 8px;color:#dce4f3}input,select{width:100%;padding:13px;background:#0c1425;color:#fff;border:1px solid #34425e;border-radius:10px}
+button{background:var(--gold);border:0;border-radius:11px;padding:14px 20px;font-weight:bold;cursor:pointer;margin-top:18px;width:100%;font-size:16px}
+button:disabled{opacity:.5;cursor:wait}.hint{font-size:13px;color:var(--muted);line-height:1.5}
+#status{margin-top:18px;color:#f5d77a;white-space:pre-wrap}.clip{padding:14px;border:1px solid #34425e;border-radius:12px;margin-top:12px}
+a{color:#ffd45c}.clip p{color:#c5cee0}.pill{color:#111;background:#80e0a5;padding:4px 8px;border-radius:20px;font-size:12px}
+</style></head>
+<body><main>
+<div class="brand"><div class="logo">CL</div><div><h1>CLIP LUY</h1><div class="sub">AI VIDEO CLIP CREATOR · SIN MARCA DE AGUA</div></div></div>
+<section class="panel">
+<h2>Convierte un video largo en clips</h2>
+<p class="hint">Sube un video que tengas derecho a usar. CLIP LUY transcribe el audio, puntúa posibles momentos destacados y exporta clips verticales MP4.</p>
+<form id="form">
+<label>Video</label><input type="file" name="video" accept="video/*" required>
+<label>Duración de cada clip</label><select name="clip_seconds"><option value="15">15 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select>
+<button id="go">ANALIZAR Y CREAR CLIPS</button>
+</form><div id="status"></div><div id="results"></div>
+</section>
+<p class="hint">Versión inicial: la selección usa transcripción y reglas sencillas, no una IA que comprenda perfectamente el contexto. El primer análisis puede tardar porque descarga el modelo de voz. Procesamiento local en tu PC.</p>
+</main>
+<script>
+const form=document.querySelector('#form'), status=document.querySelector('#status'), results=document.querySelector('#results'), go=document.querySelector('#go');
+form.addEventListener('submit',async e=>{
+ e.preventDefault();results.innerHTML='';go.disabled=true;status.textContent='Preparando video y analizando el audio. La primera vez puede tardar varios minutos...';
+ try{
+  const fd=new FormData(form);const r=await fetch('/process',{method:'POST',body:fd});const data=await r.json();
+  if(!r.ok)throw new Error(data.detail||'No se pudo procesar el video.');
+  status.textContent=`Idioma detectado: ${data.language}. Se crearon ${data.clips.length} clips.`;
+  data.clips.forEach((c,i)=>{const d=document.createElement('div');d.className='clip';d.innerHTML=`<b>CLIP ${i+1}</b> <span class="pill">${c.start}s – ${c.end}s</span><p></p><a href="${c.url}" download>Descargar MP4 sin marca de agua</a>`;d.querySelector('p').textContent=c.transcript;results.appendChild(d)});
+ }catch(err){status.textContent='Error: '+err.message}
+ finally{go.disabled=false}
+});
+</script></body></html>
